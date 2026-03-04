@@ -33,6 +33,8 @@ python scraper.py --reset-baseline
 Outputs:
 
 - Delta file: `outputs/delta_<UTC timestamp>.csv`
+- Stable latest file: `outputs/delta_latest.csv`
+- Compatibility latest file: `output/delta_latest.csv`
 - Baseline file: `data/baseline.csv`
 
 ## GitHub Actions daily run
@@ -68,3 +70,6 @@ After each run, download from the stable path:
 - `/workspace/sc-procurement/outputs/delta_latest.csv`
 
 You can still access timestamped runs in `outputs/delta_<UTC timestamp>.csv`.
+
+
+Compatibility output directory: a copy of each generated delta is also written to `output/` in case your tooling expects that folder name.

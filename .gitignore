@@ -1,3 +1,6 @@
 outputs/*.csv
 !outputs/.gitkeep
 __pycache__/
+
+output/*.csv
+!output/.gitkeep

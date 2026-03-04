@@ -149,11 +149,13 @@ def main() -> int:
     parser.add_argument("--output-dir", default="outputs", help="Directory for delta CSV files")
     parser.add_argument("--reset-baseline", action="store_true", help="Reset baseline CSV to empty and exit")
     parser.add_argument("--latest-file", default="outputs/delta_latest.csv", help="Stable path updated to latest delta CSV")
+    parser.add_argument("--legacy-output-dir", default="output", help="Secondary output directory for compatibility")
     args = parser.parse_args()
 
     baseline_path = Path(args.baseline)
     output_dir = Path(args.output_dir)
     latest_file = Path(args.latest_file)
+    legacy_output_dir = Path(args.legacy_output_dir)
 
     if args.reset_baseline:
         reset_baseline(baseline_path)
@@ -169,10 +171,19 @@ def main() -> int:
     write_csv(delta_path, delta_rows)
     latest_file.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(delta_path, latest_file)
+
+    legacy_output_dir.mkdir(parents=True, exist_ok=True)
+    legacy_delta_path = legacy_output_dir / delta_path.name
+    legacy_latest_path = legacy_output_dir / "delta_latest.csv"
+    shutil.copyfile(delta_path, legacy_delta_path)
+    shutil.copyfile(delta_path, legacy_latest_path)
+
     write_csv(baseline_path, current_rows)
 
     print(f"Delta CSV: {delta_path.resolve()}")
     print(f"Latest Delta CSV: {latest_file.resolve()}")
+    print(f"Compatibility Delta CSV: {legacy_delta_path.resolve()}")
+    print(f"Compatibility Latest Delta CSV: {legacy_latest_path.resolve()}")
     print(f"New solicitations: {len(delta_rows)}")
     print(f"Baseline updated: {baseline_path.resolve()} ({len(current_rows)} rows)")
     return 0
