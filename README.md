@@ -45,3 +45,11 @@ A workflow is included at `.github/workflows/daily_procurement_delta.yml`.
 - Commits updated `data/baseline.csv` back to the branch.
 
 In ChatGPT/Codex terminal runs, use the printed absolute `Delta CSV` path to download directly from the environment.
+
+
+## Build and run
+
+```bash
+make build
+make run
+```

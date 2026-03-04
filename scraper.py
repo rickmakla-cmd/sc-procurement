@@ -8,6 +8,7 @@ import csv
 import datetime as dt
 import html
 import re
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -27,7 +28,7 @@ COLUMNS = [
 ]
 
 
-def fetch_url(url: str) -> str:
+def fetch_url(url: str, retries: int = 3, timeout: int = 60) -> str:
     request = urllib.request.Request(
         url,
         headers={
@@ -35,8 +36,21 @@ def fetch_url(url: str) -> str:
             "Accept": "text/html,application/xhtml+xml",
         },
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
-        return response.read().decode("iso-8859-1", errors="replace")
+
+    last_error: Exception | None = None
+    for attempt in range(1, retries + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return response.read().decode("iso-8859-1", errors="replace")
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            if attempt == retries:
+                break
+            time.sleep(attempt)
+
+    if last_error is not None:
+        raise RuntimeError(f"Failed to fetch URL after {retries} attempts: {url}") from last_error
+    raise RuntimeError(f"Failed to fetch URL: {url}")
 
 
 def extract_total_pages(html_text: str) -> int:
