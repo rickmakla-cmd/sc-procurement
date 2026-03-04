@@ -53,3 +53,18 @@ In ChatGPT/Codex terminal runs, use the printed absolute `Delta CSV` path to dow
 make build
 make run
 ```
+
+
+## Native Codex run
+
+Use the helper script to run directly in the Codex environment:
+
+```bash
+./run_codex.sh
+```
+
+After each run, download from the stable path:
+
+- `/workspace/sc-procurement/outputs/delta_latest.csv`
+
+You can still access timestamped runs in `outputs/delta_<UTC timestamp>.csv`.

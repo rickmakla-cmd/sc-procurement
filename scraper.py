@@ -9,6 +9,7 @@ import datetime as dt
 import html
 import re
 import time
+import shutil
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -147,10 +148,12 @@ def main() -> int:
     parser.add_argument("--baseline", default="data/baseline.csv", help="Baseline CSV path")
     parser.add_argument("--output-dir", default="outputs", help="Directory for delta CSV files")
     parser.add_argument("--reset-baseline", action="store_true", help="Reset baseline CSV to empty and exit")
+    parser.add_argument("--latest-file", default="outputs/delta_latest.csv", help="Stable path updated to latest delta CSV")
     args = parser.parse_args()
 
     baseline_path = Path(args.baseline)
     output_dir = Path(args.output_dir)
+    latest_file = Path(args.latest_file)
 
     if args.reset_baseline:
         reset_baseline(baseline_path)
@@ -164,9 +167,12 @@ def main() -> int:
     timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     delta_path = output_dir / f"delta_{timestamp}.csv"
     write_csv(delta_path, delta_rows)
+    latest_file.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(delta_path, latest_file)
     write_csv(baseline_path, current_rows)
 
     print(f"Delta CSV: {delta_path.resolve()}")
+    print(f"Latest Delta CSV: {latest_file.resolve()}")
     print(f"New solicitations: {len(delta_rows)}")
     print(f"Baseline updated: {baseline_path.resolve()} ({len(current_rows)} rows)")
     return 0
