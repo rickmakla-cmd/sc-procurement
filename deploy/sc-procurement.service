@@ -1,0 +1,14 @@
+[Unit]
+Description=SC Procurement Daily Delta Scraper
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ec2-user
+WorkingDirectory=/opt/sc-procurement
+EnvironmentFile=/opt/sc-procurement/.env
+ExecStart=/usr/bin/bash -lc 'cd /opt/sc-procurement && /usr/bin/python3 scraper.py --s3-bucket "$S3_BUCKET" --s3-prefix "$S3_PREFIX"'
+
+[Install]
+WantedBy=multi-user.target
