@@ -1,0 +1,10 @@
+[Unit]
+Description=Run SC Procurement scraper daily
+
+[Timer]
+OnCalendar=*-*-* 11:15:00 UTC
+Persistent=true
+Unit=sc-procurement.service
+
+[Install]
+WantedBy=timers.target
