@@ -4,6 +4,16 @@ This app checks South Carolina open solicitations, finds what is new compared to
 
 ---
 
+## Required AWS targets for this deployment
+
+This code is now configured to target:
+
+- S3 bucket ARN: `arn:aws:s3:::sc-procurement`
+- EC2 instance ID: `i-0e5fc9f790256a3e1`
+- EC2 instance ARN: `arn:aws:ec2:us-east-1:000442375884:instance/i-0e5fc9f790256a3e1`
+
+You can still override values with CLI flags or environment variables if needed.
+
 ## What this app does
 
 On each run it will:
@@ -55,7 +65,7 @@ python scraper.py
 ### Run with S3 upload
 
 ```bash
-python scraper.py --s3-bucket "your-bucket-name" --s3-prefix "sc-procurement"
+python scraper.py --s3-bucket "arn:aws:s3:::sc-procurement" --s3-prefix "sc-procurement"
 ```
 
 ### Reset baseline to empty
@@ -113,6 +123,11 @@ This section assumes you are new to AWS and programming.
    - Allow SSH (port 22) from your IP only.
 8. Storage: 8–16 GB is enough.
 9. Click **Launch instance**.
+10. Confirm you are using the exact instance ID required:
+
+```bash
+aws ec2 describe-instances --instance-ids i-0e5fc9f790256a3e1 --region us-east-1
+```
 
 ---
 
@@ -191,8 +206,10 @@ nano .env
 Update values:
 
 ```env
-S3_BUCKET=your-real-bucket-name
+S3_BUCKET=arn:aws:s3:::sc-procurement
 S3_PREFIX=sc-procurement
+EC2_INSTANCE_ID=i-0e5fc9f790256a3e1
+EC2_INSTANCE_ARN=arn:aws:ec2:us-east-1:000442375884:instance/i-0e5fc9f790256a3e1
 ```
 
 Save and exit.

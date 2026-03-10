@@ -31,6 +31,19 @@ COLUMNS = [
 ]
 
 
+def bucket_name_from_arn_or_name(value: str) -> str:
+    cleaned = (value or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned.startswith("arn:aws:s3:::"):
+        return cleaned.split(":::", 1)[1].strip("/")
+    return cleaned.replace("s3://", "").strip("/")
+
+
+def bucket_arn_from_name(name: str) -> str:
+    return f"arn:aws:s3:::{name}"
+
+
 def fetch_url(url: str, retries: int = 3, timeout: int = 60) -> str:
     request = urllib.request.Request(
         url,
@@ -182,7 +195,11 @@ def main() -> int:
     parser.add_argument("--latest-file", default="outputs/delta_latest.csv", help="Stable path updated to latest delta CSV")
     parser.add_argument("--legacy-output-dir", default="output", help="Secondary output directory for compatibility")
     parser.add_argument("--reset-baseline", action="store_true", help="Reset baseline CSV to empty and exit")
-    parser.add_argument("--s3-bucket", default=os.getenv("S3_BUCKET", ""), help="S3 bucket to store baseline/delta files")
+    parser.add_argument(
+        "--s3-bucket",
+        default=os.getenv("S3_BUCKET", "arn:aws:s3:::sc-procurement"),
+        help="S3 bucket name, s3:// URI, or bucket ARN to store baseline/delta files",
+    )
     parser.add_argument("--s3-prefix", default=os.getenv("S3_PREFIX", "sc-procurement"), help="S3 key prefix")
     parser.add_argument("--skip-s3-download", action="store_true", help="Skip pulling baseline.csv from S3 before processing")
     parser.add_argument("--allow-empty-scrape", action="store_true", help="Allow baseline overwrite when scrape returns zero rows")
@@ -192,16 +209,17 @@ def main() -> int:
     output_dir = Path(args.output_dir)
     latest_file = Path(args.latest_file)
     legacy_output_dir = Path(args.legacy_output_dir)
+    s3_bucket_name = bucket_name_from_arn_or_name(args.s3_bucket)
 
     if args.reset_baseline:
         reset_baseline(baseline_path)
         print(f"Baseline reset: {baseline_path.resolve()}")
         return 0
 
-    if args.s3_bucket and not args.skip_s3_download:
-        pulled = sync_baseline_from_s3(baseline_path, args.s3_bucket, args.s3_prefix)
+    if s3_bucket_name and not args.skip_s3_download:
+        pulled = sync_baseline_from_s3(baseline_path, s3_bucket_name, args.s3_prefix)
         if pulled:
-            print(f"Loaded baseline from S3: s3://{args.s3_bucket}/{args.s3_prefix.rstrip('/')}/baseline.csv")
+            print(f"Loaded baseline from S3: s3://{s3_bucket_name}/{args.s3_prefix.rstrip('/')}/baseline.csv")
         else:
             print("No baseline found in S3; continuing with local/empty baseline.")
 
@@ -228,13 +246,14 @@ def main() -> int:
 
     write_csv(baseline_path, current_rows)
 
-    if args.s3_bucket:
+    if s3_bucket_name:
         upload_files_to_s3(
-            args.s3_bucket,
+            s3_bucket_name,
             args.s3_prefix,
             [delta_path, latest_file, baseline_path],
         )
-        print(f"Uploaded baseline and delta files to s3://{args.s3_bucket}/{args.s3_prefix.rstrip('/')}/")
+        print(f"Uploaded baseline and delta files to s3://{s3_bucket_name}/{args.s3_prefix.rstrip('/')}/")
+        print(f"Target S3 bucket ARN: {bucket_arn_from_name(s3_bucket_name)}")
 
     print(f"Delta CSV: {delta_path.resolve()}")
     print(f"Latest Delta CSV: {latest_file.resolve()}")
